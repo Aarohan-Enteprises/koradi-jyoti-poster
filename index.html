@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>अखंड मनोकामना ज्योत - पोस्टर जनरेटर</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='54' font-size='56'%3E%F0%9F%9A%A9%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a0a00;
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(255,100,0,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(200,50,0,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 0%, rgba(255,150,0,0.1) 0%, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 12px;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M30 5 L35 20 L50 20 L38 30 L42 45 L30 36 L18 45 L22 30 L10 20 L25 20Z' fill='rgba(255,150,0,0.03)'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        h1 {
+            color: #ff9933; text-align: center; margin-bottom: 4px; font-size: clamp(1.1rem, 4.5vw, 1.8rem);
+            text-shadow: 0 0 20px rgba(255,153,51,0.4), 0 2px 4px rgba(0,0,0,0.5);
+            position: relative; z-index: 1;
+            padding: 0 8px;
+        }
+        .subtitle {
+            color: #e8a840; text-align: center; margin-bottom: 20px;
+            font-size: clamp(0.8rem, 3vw, 1rem);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            position: relative; z-index: 1;
+        }
+
+        .container {
+            display: flex; gap: 30px;
+            justify-content: center; width: 100%; max-width: 1200px;
+            position: relative; z-index: 1;
+            align-items: flex-start;
+        }
+
+        .form-panel {
+            background: linear-gradient(180deg, #2a0f00 0%, #1a0800 100%);
+            border-radius: 16px; padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,150,0,0.1);
+            width: 360px; flex-shrink: 0;
+            border: 1px solid rgba(255,150,0,0.25);
+        }
+
+        .form-panel h2 {
+            color: #ff9933; margin-bottom: 20px; font-size: 1.2rem;
+            border-bottom: 1px solid rgba(255,150,0,0.3); padding-bottom: 8px;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block; margin-bottom: 6px;
+            font-weight: 600; color: #e8a840; font-size: 0.95rem;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%; padding: 10px 14px;
+            border: 1px solid rgba(255,150,0,0.3);
+            border-radius: 8px; font-size: 1rem;
+            background: rgba(255,255,255,0.08); color: #ffe0b0;
+        }
+        .form-group input[type="text"]::placeholder { color: rgba(255,200,130,0.4); }
+        .form-group input[type="text"]:focus {
+            outline: none; border-color: #ff9933;
+            box-shadow: 0 0 8px rgba(255,153,51,0.3);
+        }
+
+        .photo-upload {
+            border: 2px dashed rgba(255,150,0,0.3); border-radius: 12px; padding: 20px;
+            text-align: center; cursor: pointer;
+            background: rgba(255,150,0,0.05); position: relative;
+        }
+        .photo-upload:hover {
+            border-color: #ff9933; background: rgba(255,150,0,0.1);
+        }
+        .photo-upload input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer;
+        }
+        .photo-upload .placeholder { color: #c8864a; font-size: 0.9rem; }
+        .photo-upload .placeholder span { font-size: 2.5rem; display: block; margin-bottom: 6px; }
+
+        .image-controls {
+            margin-top: 12px; padding: 12px;
+            background: rgba(255,150,0,0.08);
+            border-radius: 10px; border: 1px solid rgba(255,150,0,0.2);
+            display: none;
+        }
+        .image-controls.active { display: block; }
+        .image-controls label {
+            font-size: 0.85rem; color: #e8a840; font-weight: 600;
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+        }
+        .image-controls input[type="range"] {
+            flex: 1; accent-color: #ff9933;
+        }
+        .image-controls .hint {
+            font-size: 0.75rem; color: #a06830; margin-top: 4px;
+        }
+
+        .btn {
+            width: 100%; padding: 12px; border: none; border-radius: 10px;
+            font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px;
+        }
+        .btn-download {
+            background: linear-gradient(135deg, #c83200, #8b1a00); color: #ffe0b0;
+            border: 1px solid rgba(255,150,0,0.3);
+        }
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(200,50,0,0.5), 0 0 15px rgba(255,100,0,0.2);
+        }
+        .btn-download:disabled {
+            background: rgba(255,255,255,0.08); color: #666;
+            cursor: not-allowed; transform: none; border-color: rgba(255,255,255,0.05);
+        }
+
+        .preview-panel {
+            background: linear-gradient(180deg, #2a0f00 0%, #1a0800 100%);
+            border-radius: 16px; padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,150,0,0.1);
+            border: 1px solid rgba(255,150,0,0.25);
+            display: flex; flex-direction: column; align-items: center;
+            flex: 1; min-width: 0;
+        }
+        .preview-panel h2 {
+            color: #ff9933; margin-bottom: 16px; font-size: 1.2rem;
+            border-bottom: 1px solid rgba(255,150,0,0.3); padding-bottom: 8px; width: 100%;
+        }
+
+        .canvas-wrapper {
+            position: relative; cursor: grab; user-select: none;
+            width: 100%;
+        }
+        .canvas-wrapper:active { cursor: grabbing; }
+
+        #previewCanvas {
+            width: 100%; height: auto;
+            border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .msg {
+            margin-top: 10px; padding: 8px 12px; border-radius: 8px;
+            font-size: 0.85rem; text-align: center; display: none;
+        }
+        .msg.error { background: rgba(200,0,0,0.2); color: #ff6666; display: block; }
+        .msg.success { background: rgba(0,150,0,0.2); color: #66ff66; display: block; }
+
+
+        .site-footer {
+            margin-top: 40px; padding: 16px 20px;
+            text-align: center; font-size: 0.8rem;
+            color: rgba(255,200,130,0.5);
+            border-top: 1px solid rgba(255,150,0,0.15);
+            width: 100%; max-width: 1200px;
+            position: relative; z-index: 1;
+        }
+        .site-footer a {
+            color: #e8a840; text-decoration: none;
+        }
+        .site-footer a:hover {
+            color: #ff9933; text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 12px 8px; }
+            .container {
+                flex-direction: column-reverse; align-items: center;
+                gap: 16px;
+            }
+            .form-panel, .preview-panel {
+                width: 100%; max-width: 100%;
+                border-radius: 12px; padding: 16px;
+            }
+            .form-panel h2 { font-size: 1.1rem; margin-bottom: 14px; }
+            .form-group { margin-bottom: 12px; }
+            .form-group input[type="text"] { padding: 10px 12px; font-size: 16px; }
+            .photo-upload { padding: 16px; }
+            .btn { padding: 14px; font-size: 1.05rem; }
+            .preview-panel { padding: 12px; }
+            .preview-panel h2 { font-size: 1rem; margin-bottom: 10px; }
+            .image-controls { padding: 10px; }
+            .image-controls .hint { font-size: 0.7rem; }
+            .site-footer { margin-top: 24px; padding: 12px 8px; font-size: 0.75rem; }
+        }
+
+        @media (max-width: 380px) {
+            h1 { font-size: 1rem; }
+            .form-panel, .preview-panel { padding: 12px; }
+            .form-group input[type="text"] { padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>श्री महालक्ष्मी जगदंबा संस्थान, कोराडी</h1>
+    <p class="subtitle">अखंड मनोकामना ज्योत परिवार - पोस्टर जनरेटर</p>
+
+    <div class="container">
+        <div class="form-panel">
+            <h2>भक्त माहिती भरा</h2>
+
+            <div class="form-group">
+                <label for="devoteeName">भक्ताचे नाव / Devotee Name</label>
+                <input type="text" id="devoteeName" placeholder="नाव टाका...">
+            </div>
+
+            <div class="form-group">
+                <label for="jyotiNumber">ज्योत क्रमांक / Jyoti Number</label>
+                <input type="text" id="jyotiNumber" placeholder="ज्योत नंबर टाका...">
+            </div>
+
+            <div class="form-group">
+                <label>भक्ताचा फोटो / Devotee Photo</label>
+                <div class="photo-upload" id="photoUploadArea">
+                    <input type="file" id="devoteePhoto" accept="image/*">
+                    <div class="placeholder" id="photoPlaceholder">
+                        <span>📷</span>
+                        फोटो अपलोड करा<br><small>टॅप करा / Tap to upload</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="image-controls" id="imageControls">
+                <label>Zoom / आकार बदला
+                    <input type="range" id="zoomSlider" min="50" max="300" value="100" step="1">
+                </label>
+                <p class="hint">Preview वर ड्रॅग करा फोटो हलवण्यासाठी (Touch / Mouse)</p>
+            </div>
+
+            <button class="btn btn-download" id="downloadBtn" onclick="downloadPoster()" disabled>डाउनलोड करा</button>
+
+            <div class="msg" id="msgBox"></div>
+
+            <input type="hidden" id="jyotiX" value="557">
+            <input type="hidden" id="jyotiY" value="696">
+            <input type="hidden" id="jyotiSize" value="42">
+            <input type="hidden" id="nameX" value="830">
+            <input type="hidden" id="nameY" value="695">
+            <input type="hidden" id="nameSize" value="30">
+        </div>
+
+        <div class="preview-panel">
+            <h2>पोस्टर प्रीव्यू</h2>
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <canvas id="previewCanvas" width="1080" height="1080"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('previewCanvas');
+        const ctx = canvas.getContext('2d');
+        const wrapper = document.getElementById('canvasWrapper');
+
+        // White box exact coordinates (from pixel analysis)
+        // Photo fills full white area
+        const BOX = { x: 522, y: 416, w: 494, h: 248 };
+        // Jyoti circle overlay (redraw from template ON TOP of photo)
+        const CIRCLE = { cx: 554, cy: 696, r: 96 };
+
+        let templateImg = null;
+        let devoteeImg = null;
+
+        // Image transform state (position & scale within the white box)
+        let imgOffsetX = 0;
+        let imgOffsetY = 0;
+        let imgScale = 1;
+
+        // Drag state
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragStartOffX = 0;
+        let dragStartOffY = 0;
+
+        // Load template
+        templateImg = new Image();
+        templateImg.onload = () => render();
+        templateImg.src = 'template.png';
+
+        // Photo upload
+        document.getElementById('devoteePhoto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                devoteeImg = new Image();
+                devoteeImg.onload = () => {
+                    // Auto-fit: scale image to cover the white box
+                    autoFit();
+                    document.getElementById('photoPlaceholder').style.display = 'none';
+                    document.getElementById('imageControls').classList.add('active');
+                    render();
+                };
+                devoteeImg.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function autoFit() {
+            if (!devoteeImg) return;
+            // Scale to cover the box (fill, not fit)
+            const scaleX = BOX.w / devoteeImg.width;
+            const scaleY = BOX.h / devoteeImg.height;
+            imgScale = Math.max(scaleX, scaleY);
+            // Center the image in the box
+            const drawW = devoteeImg.width * imgScale;
+            const drawH = devoteeImg.height * imgScale;
+            imgOffsetX = (BOX.w - drawW) / 2;
+            imgOffsetY = (BOX.h - drawH) / 2;
+            // Update zoom slider (100 = auto-fit scale)
+            document.getElementById('zoomSlider').value = 100;
+        }
+
+        // Zoom slider
+        document.getElementById('zoomSlider').addEventListener('input', function() {
+            if (!devoteeImg) return;
+            const baseScaleX = BOX.w / devoteeImg.width;
+            const baseScaleY = BOX.h / devoteeImg.height;
+            const baseScale = Math.max(baseScaleX, baseScaleY);
+            const zoomFactor = this.value / 100;
+            const newScale = baseScale * zoomFactor;
+
+            // Zoom toward center of box
+            const oldDrawW = devoteeImg.width * imgScale;
+            const oldDrawH = devoteeImg.height * imgScale;
+            const newDrawW = devoteeImg.width * newScale;
+            const newDrawH = devoteeImg.height * newScale;
+
+            // Keep center point stable
+            const oldCenterX = imgOffsetX + oldDrawW / 2;
+            const oldCenterY = imgOffsetY + oldDrawH / 2;
+            imgOffsetX = oldCenterX - newDrawW / 2;
+            imgOffsetY = oldCenterY - newDrawH / 2;
+            imgScale = newScale;
+
+            render();
+        });
+
+        // Drag to pan on canvas
+        function getCanvasScale() {
+            return canvas.width / wrapper.getBoundingClientRect().width;
+        }
+
+        wrapper.addEventListener('mousedown', (e) => {
+            if (!devoteeImg) return;
+            isDragging = true;
+            const scale = getCanvasScale();
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            dragStartOffX = imgOffsetX;
+            dragStartOffY = imgOffsetY;
+            e.preventDefault();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const scale = getCanvasScale();
+            const dx = (e.clientX - dragStartX) * scale;
+            const dy = (e.clientY - dragStartY) * scale;
+            imgOffsetX = dragStartOffX + dx;
+            imgOffsetY = dragStartOffY + dy;
+            render();
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        // Touch support for mobile
+        wrapper.addEventListener('touchstart', (e) => {
+            if (!devoteeImg || e.touches.length !== 1) return;
+            isDragging = true;
+            const touch = e.touches[0];
+            const scale = getCanvasScale();
+            dragStartX = touch.clientX;
+            dragStartY = touch.clientY;
+            dragStartOffX = imgOffsetX;
+            dragStartOffY = imgOffsetY;
+            e.preventDefault();
+        }, { passive: false });
+
+        wrapper.addEventListener('touchmove', (e) => {
+            if (!isDragging || e.touches.length !== 1) return;
+            const touch = e.touches[0];
+            const scale = getCanvasScale();
+            const dx = (touch.clientX - dragStartX) * scale;
+            const dy = (touch.clientY - dragStartY) * scale;
+            imgOffsetX = dragStartOffX + dx;
+            imgOffsetY = dragStartOffY + dy;
+            render();
+            e.preventDefault();
+        }, { passive: false });
+
+        wrapper.addEventListener('touchend', () => { isDragging = false; });
+
+        // Mouse wheel zoom on canvas
+        wrapper.addEventListener('wheel', (e) => {
+            if (!devoteeImg) return;
+            e.preventDefault();
+            const slider = document.getElementById('zoomSlider');
+            let val = parseInt(slider.value);
+            val += e.deltaY < 0 ? 5 : -5;
+            val = Math.max(50, Math.min(300, val));
+            slider.value = val;
+            slider.dispatchEvent(new Event('input'));
+        }, { passive: false });
+
+        function render() {
+            if (!templateImg || !templateImg.complete) return;
+
+            const name = document.getElementById('devoteeName').value.trim();
+            const jyoti = document.getElementById('jyotiNumber').value.trim();
+
+            // Draw template
+            ctx.drawImage(templateImg, 0, 0, 1080, 1080);
+
+            // Draw devotee photo clipped to white box
+            if (devoteeImg) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(BOX.x, BOX.y, BOX.w, BOX.h);
+                ctx.clip();
+
+                const drawW = devoteeImg.width * imgScale;
+                const drawH = devoteeImg.height * imgScale;
+                ctx.drawImage(
+                    devoteeImg,
+                    BOX.x + imgOffsetX,
+                    BOX.y + imgOffsetY,
+                    drawW,
+                    drawH
+                );
+                ctx.restore();
+
+                // Redraw jyoti circle area from template ON TOP of photo
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(CIRCLE.cx, CIRCLE.cy, CIRCLE.r, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.clip();
+                ctx.drawImage(templateImg, 0, 0, 1080, 1080);
+                ctx.restore();
+            }
+
+            // Draw Jyoti Number on the yellow area inside circle
+            if (jyoti) {
+                const jx = parseInt(document.getElementById('jyotiX').value);
+                const jy = parseInt(document.getElementById('jyotiY').value);
+                const js = parseInt(document.getElementById('jyotiSize').value);
+                ctx.font = `bold ${js}px 'Segoe UI', Arial, sans-serif`;
+                ctx.fillStyle = '#8b0000';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.strokeText(jyoti, jx, jy);
+                ctx.fillText(jyoti, jx, jy);
+            }
+
+            // Draw Devotee Name on the red strip below photo
+            if (name) {
+                const nx = parseInt(document.getElementById('nameX').value);
+                const ny = parseInt(document.getElementById('nameY').value);
+                const ns = parseInt(document.getElementById('nameSize').value);
+                ctx.font = `bold ${ns}px 'Segoe UI', Arial, sans-serif`;
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(name, nx, ny);
+            }
+
+            document.getElementById('downloadBtn').disabled = false;
+        }
+
+        function showMsg(text, type) {
+            const box = document.getElementById('msgBox');
+            box.textContent = text;
+            box.className = 'msg ' + type;
+            setTimeout(() => { box.className = 'msg'; }, 3000);
+        }
+
+        function downloadPoster() {
+            const name = document.getElementById('devoteeName').value.trim() || 'devotee';
+            const link = document.createElement('a');
+            link.download = `Jyoti_Poster_${name.replace(/\s+/g, '_')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showMsg('पोस्टर डाउनलोड झाले!', 'success');
+        }
+
+        // Auto-render on text input
+        document.getElementById('devoteeName').addEventListener('input', render);
+        document.getElementById('jyotiNumber').addEventListener('input', render);
+    </script>
+    <footer class="site-footer">
+        Designed & Developed by <a href="https://pinecoder.in" target="_blank">Aarohan Enterprises, Nagpur <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+    </footer>
+</body>
+</html>
