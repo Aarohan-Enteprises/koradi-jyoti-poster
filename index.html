@@ -103,23 +103,68 @@
         .photo-upload .placeholder { color: #c8864a; font-size: 0.9rem; }
         .photo-upload .placeholder span { font-size: 2.5rem; display: block; margin-bottom: 6px; }
 
-        .image-controls {
-            margin-top: 12px; padding: 12px;
-            background: rgba(255,150,0,0.08);
-            border-radius: 10px; border: 1px solid rgba(255,150,0,0.2);
-            display: none;
+        /* Cropper Modal */
+        .cropper-overlay {
+            display: none; position: fixed; inset: 0; z-index: 1000;
+            background: rgba(0,0,0,0.92);
+            flex-direction: column; align-items: center; justify-content: center;
+            padding: 16px;
         }
-        .image-controls.active { display: block; }
-        .image-controls label {
-            font-size: 0.85rem; color: #e8a840; font-weight: 600;
-            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+        .cropper-overlay.active { display: flex; }
+        .cropper-title {
+            color: #fff; font-size: 1.1rem; font-weight: 600; margin-bottom: 12px;
+            text-align: center;
         }
-        .image-controls input[type="range"] {
+        .cropper-container {
+            position: relative; overflow: hidden;
+            width: min(90vw, 400px);
+            border-radius: 12px; touch-action: none;
+            cursor: grab;
+        }
+        .cropper-container:active { cursor: grabbing; }
+        .cropper-canvas {
+            display: block; width: 100%; height: auto;
+            border-radius: 12px;
+        }
+        .cropper-controls {
+            margin-top: 16px; width: min(90vw, 400px);
+            display: flex; flex-direction: column; gap: 12px; align-items: center;
+        }
+        .cropper-controls label {
+            font-size: 0.9rem; color: #e8a840; font-weight: 600;
+            display: flex; align-items: center; gap: 10px; width: 100%;
+        }
+        .cropper-controls input[type="range"] {
             flex: 1; accent-color: #ff9933;
         }
-        .image-controls .hint {
-            font-size: 0.75rem; color: #a06830; margin-top: 4px;
+        .cropper-controls .zoom-value {
+            font-size: 0.8rem; color: #ff9933; min-width: 36px; text-align: right;
         }
+        .cropper-btn-row {
+            display: flex; gap: 10px; width: 100%;
+        }
+        .btn-cropper {
+            flex: 1; padding: 12px; border: none; border-radius: 10px;
+            font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-cropper-done {
+            background: linear-gradient(135deg, #c83200, #8b1a00); color: #ffe0b0;
+            border: 1px solid rgba(255,150,0,0.3);
+        }
+        .btn-cropper-done:hover { box-shadow: 0 4px 20px rgba(200,50,0,0.5); }
+        .btn-cropper-reset {
+            background: transparent; color: #e8a840;
+            border: 1px solid rgba(255,150,0,0.3);
+        }
+        .btn-cropper-reset:hover { border-color: #ff9933; color: #ff9933; }
+        .btn-adjust {
+            width: 100%; padding: 10px; border: 1px solid rgba(255,150,0,0.3); border-radius: 8px;
+            background: rgba(255,150,0,0.05); color: #e8a840; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; margin-top: 8px;
+            display: none;
+        }
+        .btn-adjust.active { display: block; }
+        .btn-adjust:hover { border-color: #ff9933; color: #ff9933; background: rgba(255,150,0,0.1); }
 
         .btn {
             width: 100%; padding: 12px; border: none; border-radius: 10px;
@@ -152,10 +197,9 @@
         }
 
         .canvas-wrapper {
-            position: relative; cursor: grab; user-select: none;
+            position: relative; user-select: none;
             width: 100%;
         }
-        .canvas-wrapper:active { cursor: grabbing; }
 
         #previewCanvas {
             width: 100%; height: auto;
@@ -202,8 +246,6 @@
             .btn { padding: 14px; font-size: 1.05rem; }
             .preview-panel { padding: 12px; }
             .preview-panel h2 { font-size: 1rem; margin-bottom: 10px; }
-            .image-controls { padding: 10px; }
-            .image-controls .hint { font-size: 0.7rem; }
             .site-footer { margin-top: 24px; padding: 12px 8px; font-size: 0.75rem; }
         }
 
@@ -243,12 +285,7 @@
                 </div>
             </div>
 
-            <div class="image-controls" id="imageControls">
-                <label>Zoom / आकार बदला
-                    <input type="range" id="zoomSlider" min="50" max="300" value="100" step="1">
-                </label>
-                <p class="hint">Preview वर ड्रॅग करा फोटो हलवण्यासाठी (Touch / Mouse)</p>
-            </div>
+            <button class="btn-adjust" id="adjustBtn" onclick="openCropper()">फोटो सेट करा / Adjust Photo</button>
 
             <button class="btn btn-download" id="downloadBtn" onclick="downloadPoster()" disabled>डाउनलोड करा</button>
 
@@ -270,13 +307,30 @@
         </div>
     </div>
 
+    <!-- Photo Cropper Modal -->
+    <div class="cropper-overlay" id="cropperOverlay">
+        <p class="cropper-title">फोटो सेट करा / Adjust Photo</p>
+        <div class="cropper-container" id="cropperContainer">
+            <canvas class="cropper-canvas" id="cropperCanvas" width="600" height="340"></canvas>
+        </div>
+        <div class="cropper-controls">
+            <label>Zoom
+                <input type="range" id="cropperZoom" min="100" max="300" value="100" step="1">
+                <span class="zoom-value" id="cropperZoomValue">100%</span>
+            </label>
+            <div class="cropper-btn-row">
+                <button class="btn-cropper btn-cropper-reset" onclick="cropperReset()">Re-center</button>
+                <button class="btn-cropper btn-cropper-done" onclick="closeCropper()">Done</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const canvas = document.getElementById('previewCanvas');
         const ctx = canvas.getContext('2d');
         const wrapper = document.getElementById('canvasWrapper');
 
         // White box exact coordinates (from pixel analysis)
-        // Photo fills full white area
         const BOX = { x: 522, y: 416, w: 494, h: 248 };
         // Jyoti circle overlay (redraw from template ON TOP of photo)
         const CIRCLE = { cx: 554, cy: 696, r: 96 };
@@ -284,17 +338,10 @@
         let templateImg = null;
         let devoteeImg = null;
 
-        // Image transform state (position & scale within the white box)
+        // Image transform state
         let imgOffsetX = 0;
         let imgOffsetY = 0;
         let imgScale = 1;
-
-        // Drag state
-        let isDragging = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
-        let dragStartOffX = 0;
-        let dragStartOffY = 0;
 
         // Load template
         templateImg = new Image();
@@ -309,11 +356,11 @@
             reader.onload = function(evt) {
                 devoteeImg = new Image();
                 devoteeImg.onload = () => {
-                    // Auto-fit: scale image to cover the white box
                     autoFit();
                     document.getElementById('photoPlaceholder').style.display = 'none';
-                    document.getElementById('imageControls').classList.add('active');
+                    document.getElementById('adjustBtn').classList.add('active');
                     render();
+                    openCropper();
                 };
                 devoteeImg.src = evt.target.result;
             };
@@ -322,109 +369,227 @@
 
         function autoFit() {
             if (!devoteeImg) return;
-            // Scale to cover the box (fill, not fit)
             const scaleX = BOX.w / devoteeImg.width;
             const scaleY = BOX.h / devoteeImg.height;
             imgScale = Math.max(scaleX, scaleY);
-            // Center the image in the box
             const drawW = devoteeImg.width * imgScale;
             const drawH = devoteeImg.height * imgScale;
             imgOffsetX = (BOX.w - drawW) / 2;
             imgOffsetY = (BOX.h - drawH) / 2;
-            // Update zoom slider (100 = auto-fit scale)
-            document.getElementById('zoomSlider').value = 100;
         }
 
-        // Zoom slider
-        document.getElementById('zoomSlider').addEventListener('input', function() {
-            if (!devoteeImg) return;
-            const baseScaleX = BOX.w / devoteeImg.width;
-            const baseScaleY = BOX.h / devoteeImg.height;
-            const baseScale = Math.max(baseScaleX, baseScaleY);
-            const zoomFactor = this.value / 100;
-            const newScale = baseScale * zoomFactor;
+        function getBaseScale() {
+            const scaleX = BOX.w / devoteeImg.width;
+            const scaleY = BOX.h / devoteeImg.height;
+            return Math.max(scaleX, scaleY);
+        }
 
-            // Zoom toward center of box
+        function constrainOffset() {
+            if (!devoteeImg) return;
+            const drawW = devoteeImg.width * imgScale;
+            const drawH = devoteeImg.height * imgScale;
+            if (drawW >= BOX.w) {
+                imgOffsetX = Math.min(0, Math.max(BOX.w - drawW, imgOffsetX));
+            } else {
+                imgOffsetX = (BOX.w - drawW) / 2;
+            }
+            if (drawH >= BOX.h) {
+                imgOffsetY = Math.min(0, Math.max(BOX.h - drawH, imgOffsetY));
+            } else {
+                imgOffsetY = (BOX.h - drawH) / 2;
+            }
+        }
+
+        // ==================== CROPPER MODAL ====================
+        const cropperCanvas = document.getElementById('cropperCanvas');
+        const cropperCtx = cropperCanvas.getContext('2d');
+        const cropperContainer = document.getElementById('cropperContainer');
+        const cropperOverlay = document.getElementById('cropperOverlay');
+        const cropperZoomSlider = document.getElementById('cropperZoom');
+
+        const CROP_PAD = 40;
+        const CROP_FRAME_W = 600 - CROP_PAD * 2; // 520
+        const CROP_FRAME_H = Math.round(CROP_FRAME_W * (BOX.h / BOX.w));
+        const CROP_CANVAS_W = 600;
+        const CROP_CANVAS_H = CROP_FRAME_H + CROP_PAD * 2;
+        const CROP_SCALE = CROP_FRAME_W / BOX.w;
+
+        cropperCanvas.width = CROP_CANVAS_W;
+        cropperCanvas.height = CROP_CANVAS_H;
+
+        let cropperDragging = false;
+        let cropperDragStartX = 0, cropperDragStartY = 0;
+        let cropperDragStartOffX = 0, cropperDragStartOffY = 0;
+        let cropperPinchDist = 0, cropperPinchStartZoom = 100;
+
+        function openCropper() {
+            if (!devoteeImg) return;
+            cropperZoomSlider.value = Math.round((imgScale / getBaseScale()) * 100);
+            updateCropperZoomDisplay();
+            cropperOverlay.classList.add('active');
+            renderCropper();
+        }
+
+        function closeCropper() {
+            cropperOverlay.classList.remove('active');
+            render();
+        }
+
+        function cropperReset() {
+            autoFit();
+            cropperZoomSlider.value = 100;
+            updateCropperZoomDisplay();
+            renderCropper();
+            render();
+        }
+
+        function updateCropperZoomDisplay() {
+            document.getElementById('cropperZoomValue').textContent = cropperZoomSlider.value + '%';
+        }
+
+        function applyCropperZoom(val) {
+            if (!devoteeImg) return;
+            val = Math.max(100, Math.min(300, val));
+            cropperZoomSlider.value = val;
+            updateCropperZoomDisplay();
+
+            const baseScale = getBaseScale();
+            const newScale = baseScale * (val / 100);
+
             const oldDrawW = devoteeImg.width * imgScale;
             const oldDrawH = devoteeImg.height * imgScale;
             const newDrawW = devoteeImg.width * newScale;
             const newDrawH = devoteeImg.height * newScale;
 
-            // Keep center point stable
-            const oldCenterX = imgOffsetX + oldDrawW / 2;
-            const oldCenterY = imgOffsetY + oldDrawH / 2;
-            imgOffsetX = oldCenterX - newDrawW / 2;
-            imgOffsetY = oldCenterY - newDrawH / 2;
+            const oldCX = imgOffsetX + oldDrawW / 2;
+            const oldCY = imgOffsetY + oldDrawH / 2;
+            imgOffsetX = oldCX - newDrawW / 2;
+            imgOffsetY = oldCY - newDrawH / 2;
             imgScale = newScale;
 
+            constrainOffset();
+            renderCropper();
             render();
-        });
-
-        // Drag to pan on canvas
-        function getCanvasScale() {
-            return canvas.width / wrapper.getBoundingClientRect().width;
         }
 
-        wrapper.addEventListener('mousedown', (e) => {
-            if (!devoteeImg) return;
-            isDragging = true;
-            const scale = getCanvasScale();
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-            dragStartOffX = imgOffsetX;
-            dragStartOffY = imgOffsetY;
-            e.preventDefault();
+        cropperZoomSlider.addEventListener('input', function() {
+            applyCropperZoom(parseInt(this.value));
         });
 
+        function renderCropper() {
+            if (!devoteeImg) return;
+            const ctx2 = cropperCtx;
+            const cw = CROP_CANVAS_W;
+            const ch = CROP_CANVAS_H;
+
+            ctx2.clearRect(0, 0, cw, ch);
+
+            const drawW = devoteeImg.width * imgScale * CROP_SCALE;
+            const drawH = devoteeImg.height * imgScale * CROP_SCALE;
+            const photoX = CROP_PAD + imgOffsetX * CROP_SCALE;
+            const photoY = CROP_PAD + imgOffsetY * CROP_SCALE;
+
+            ctx2.drawImage(devoteeImg, photoX, photoY, drawW, drawH);
+
+            // Dark overlay outside the crop frame
+            ctx2.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx2.fillRect(0, 0, cw, CROP_PAD);
+            ctx2.fillRect(0, CROP_PAD + CROP_FRAME_H, cw, CROP_PAD);
+            ctx2.fillRect(0, CROP_PAD, CROP_PAD, CROP_FRAME_H);
+            ctx2.fillRect(CROP_PAD + CROP_FRAME_W, CROP_PAD, CROP_PAD, CROP_FRAME_H);
+
+            // Crop frame border
+            ctx2.strokeStyle = '#ff9933';
+            ctx2.lineWidth = 2;
+            ctx2.strokeRect(CROP_PAD, CROP_PAD, CROP_FRAME_W, CROP_FRAME_H);
+
+            // Corner markers
+            const cornerLen = 20;
+            ctx2.strokeStyle = '#fff';
+            ctx2.lineWidth = 3;
+            ctx2.beginPath(); ctx2.moveTo(CROP_PAD, CROP_PAD + cornerLen); ctx2.lineTo(CROP_PAD, CROP_PAD); ctx2.lineTo(CROP_PAD + cornerLen, CROP_PAD); ctx2.stroke();
+            ctx2.beginPath(); ctx2.moveTo(CROP_PAD + CROP_FRAME_W - cornerLen, CROP_PAD); ctx2.lineTo(CROP_PAD + CROP_FRAME_W, CROP_PAD); ctx2.lineTo(CROP_PAD + CROP_FRAME_W, CROP_PAD + cornerLen); ctx2.stroke();
+            ctx2.beginPath(); ctx2.moveTo(CROP_PAD, CROP_PAD + CROP_FRAME_H - cornerLen); ctx2.lineTo(CROP_PAD, CROP_PAD + CROP_FRAME_H); ctx2.lineTo(CROP_PAD + cornerLen, CROP_PAD + CROP_FRAME_H); ctx2.stroke();
+            ctx2.beginPath(); ctx2.moveTo(CROP_PAD + CROP_FRAME_W - cornerLen, CROP_PAD + CROP_FRAME_H); ctx2.lineTo(CROP_PAD + CROP_FRAME_W, CROP_PAD + CROP_FRAME_H); ctx2.lineTo(CROP_PAD + CROP_FRAME_W, CROP_PAD + CROP_FRAME_H - cornerLen); ctx2.stroke();
+        }
+
+        function getCropperScale() {
+            return cropperCanvas.width / cropperContainer.getBoundingClientRect().width;
+        }
+
+        // Mouse drag in cropper
+        cropperContainer.addEventListener('mousedown', (e) => {
+            cropperDragging = true;
+            cropperDragStartX = e.clientX;
+            cropperDragStartY = e.clientY;
+            cropperDragStartOffX = imgOffsetX;
+            cropperDragStartOffY = imgOffsetY;
+            e.preventDefault();
+        });
         window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const scale = getCanvasScale();
-            const dx = (e.clientX - dragStartX) * scale;
-            const dy = (e.clientY - dragStartY) * scale;
-            imgOffsetX = dragStartOffX + dx;
-            imgOffsetY = dragStartOffY + dy;
+            if (!cropperDragging) return;
+            const s = getCropperScale() / CROP_SCALE;
+            imgOffsetX = cropperDragStartOffX + (e.clientX - cropperDragStartX) * s;
+            imgOffsetY = cropperDragStartOffY + (e.clientY - cropperDragStartY) * s;
+            constrainOffset();
+            renderCropper();
             render();
         });
+        window.addEventListener('mouseup', () => { cropperDragging = false; });
 
-        window.addEventListener('mouseup', () => { isDragging = false; });
+        // Touch drag + pinch in cropper
+        function getTouchDist(t1, t2) {
+            const dx = t1.clientX - t2.clientX;
+            const dy = t1.clientY - t2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
 
-        // Touch support for mobile
-        wrapper.addEventListener('touchstart', (e) => {
-            if (!devoteeImg || e.touches.length !== 1) return;
-            isDragging = true;
-            const touch = e.touches[0];
-            const scale = getCanvasScale();
-            dragStartX = touch.clientX;
-            dragStartY = touch.clientY;
-            dragStartOffX = imgOffsetX;
-            dragStartOffY = imgOffsetY;
+        cropperContainer.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                cropperDragging = true;
+                cropperDragStartX = e.touches[0].clientX;
+                cropperDragStartY = e.touches[0].clientY;
+                cropperDragStartOffX = imgOffsetX;
+                cropperDragStartOffY = imgOffsetY;
+                cropperPinchDist = 0;
+            } else if (e.touches.length === 2) {
+                cropperDragging = false;
+                cropperPinchDist = getTouchDist(e.touches[0], e.touches[1]);
+                cropperPinchStartZoom = parseInt(cropperZoomSlider.value);
+            }
             e.preventDefault();
         }, { passive: false });
 
-        wrapper.addEventListener('touchmove', (e) => {
-            if (!isDragging || e.touches.length !== 1) return;
-            const touch = e.touches[0];
-            const scale = getCanvasScale();
-            const dx = (touch.clientX - dragStartX) * scale;
-            const dy = (touch.clientY - dragStartY) * scale;
-            imgOffsetX = dragStartOffX + dx;
-            imgOffsetY = dragStartOffY + dy;
-            render();
+        cropperContainer.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && cropperPinchDist > 0) {
+                const newDist = getTouchDist(e.touches[0], e.touches[1]);
+                const ratio = newDist / cropperPinchDist;
+                applyCropperZoom(Math.round(cropperPinchStartZoom * ratio));
+                e.preventDefault();
+                return;
+            }
+            if (e.touches.length === 1 && cropperDragging) {
+                const s = getCropperScale() / CROP_SCALE;
+                imgOffsetX = cropperDragStartOffX + (e.touches[0].clientX - cropperDragStartX) * s;
+                imgOffsetY = cropperDragStartOffY + (e.touches[0].clientY - cropperDragStartY) * s;
+                constrainOffset();
+                renderCropper();
+                render();
+            }
             e.preventDefault();
         }, { passive: false });
 
-        wrapper.addEventListener('touchend', () => { isDragging = false; });
+        cropperContainer.addEventListener('touchend', (e) => {
+            if (e.touches.length === 0) cropperDragging = false;
+            if (e.touches.length < 2) cropperPinchDist = 0;
+        });
 
-        // Mouse wheel zoom on canvas
-        wrapper.addEventListener('wheel', (e) => {
-            if (!devoteeImg) return;
+        // Mouse wheel zoom in cropper
+        cropperContainer.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const slider = document.getElementById('zoomSlider');
-            let val = parseInt(slider.value);
+            let val = parseInt(cropperZoomSlider.value);
             val += e.deltaY < 0 ? 5 : -5;
-            val = Math.max(50, Math.min(300, val));
-            slider.value = val;
-            slider.dispatchEvent(new Event('input'));
+            applyCropperZoom(val);
         }, { passive: false });
 
         function render() {
